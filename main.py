@@ -4,13 +4,16 @@ main.py
 
 import logging
 import uuid
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from starlette_context import context
 from starlette_context.middleware import ContextMiddleware
 from starlette.responses import Response
 
+from routers import profile, notification, post
+
 logger = logging.getLogger(__name__)
 
+# fastAPI app 생성
 app = FastAPI(
     title="Balbalm Feed Backend",
     description="backend for balbalm feed service",
@@ -23,7 +26,12 @@ app.logger = logger
 
 @app.middleware("http")
 async def http_log(request, call_next):
-    """Request, Response 로그"""
+    """
+    로그
+    :param request:
+    :param call_next:
+    :return:
+    """
     response = await call_next(request)
     response_body = b''
     log_uuid = str(uuid.uuid1())[:8]
@@ -47,4 +55,42 @@ async def http_log(request, call_next):
 app.add_middleware(ContextMiddleware)
 
 # TODO: Auth 추가
-# TODO: router 추가
+
+# feed prefix 추가
+feed_router = APIRouter(
+    prefix="/feed",
+    tags=["Feed"]
+)
+
+
+@feed_router.get("", response_model=dict)
+async def get_feed_apis():
+    """
+    feed 관련 모든 api 리스팅
+    :return:
+    """
+    return {
+        "message": "Welcome to the Balbalm Feed API!",
+        "endpoints": {
+            "GET /feed/profile/{user_id}": "Get user profile by user ID",
+            "PUT /feed/profile": "Update your profile",
+            "GET /feed/profile/visitors": "Get visitors of your profile",
+            "GET /feed/posts?userId={userId}": "Get posts by user ID",
+            "GET /feed/posts/{post_id}": "Get post details by post ID",
+            "PUT /feed/posts/{post_id}": "Update a post",
+            "POST /feed/posts/{post_id}/like": "Like a post",
+            "POST /feed/posts": "Upload a new post",
+            "DELETE /feed/posts/{post_id}": "Delete a post",
+            "GET /feed/notifications": "Get notifications",
+            "DELETE /feed/notifications/{notification_id}": "Delete notification",
+            "DELETE /feed/notifications": "Delete all notification"
+        }
+    }
+
+# feed router 에 상세 path 추가
+feed_router.include_router(notification.router)
+feed_router.include_router(profile.router)
+feed_router.include_router(post.router)
+
+# app 에 추가
+app.include_router(feed_router)
