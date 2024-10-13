@@ -115,12 +115,12 @@ async def update_profile_tags(tags: ProfileTagUpdateReq, token: str):
     return {"message": "Profile Tags updated"}
 
 
-@router.get("/{user_id}/visitors", response_model=List[VisitorProfileResp])
-async def get_visitors(user_id: str):
+@router.get("/visitors", response_model=List[VisitorProfileResp])
+async def get_visitors(token: str):
     """
     방문자 리스트 API
-    :param user_id:
+    :param token:
     :return:
     """
-    print(user_id)
+    print(token)
     return None

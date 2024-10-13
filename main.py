@@ -74,7 +74,7 @@ async def get_feed_apis():
             "PUT /feed/profile": "Update your profile",
             "PUT /feed/profile/tags": "Update your profile tags",
             "GET /feed/profile/{user_id}": "Get user profile by user ID",
-            "GET /feed/profile/{user_id}/visitors": "Get visitors of a user",
+            "GET /feed/profile/visitors": "Get your profile visitors",
             "GET /feed/posts?userId={userId}": "Get posts by user ID",
             "GET /feed/posts/{post_id}": "Get post details by post ID",
             "PUT /feed/posts/{post_id}": "Update a post",
