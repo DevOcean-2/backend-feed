@@ -1,6 +1,6 @@
 .PHONY: lint
 lint:
-	pylint ./*.py
+	pylint **/*.py
 
 .PHONY: generate-requirements
 generate-requirements:

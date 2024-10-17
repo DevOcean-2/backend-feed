@@ -8,7 +8,7 @@ from fastapi import FastAPI, APIRouter
 from starlette_context import context
 from starlette_context.middleware import ContextMiddleware
 from starlette.responses import Response
-from routers import profile, notification, post
+from routers import notification, post
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +71,6 @@ async def get_feed_apis():
     return {
         "message": "Welcome to the Balbalm Feed API!",
         "endpoints": {
-            "PUT /feed/profile": "Update your profile",
-            "PUT /feed/profile/tags": "Update your profile tags",
-            "GET /feed/profile/{user_id}": "Get user profile by user ID",
-            "GET /feed/profile/visitors": "Get your profile visitors",
             "GET /feed/posts?userId={userId}": "Get posts by user ID",
             "GET /feed/posts/{post_id}": "Get post details by post ID",
             "PUT /feed/posts/{post_id}": "Update a post",
@@ -89,7 +85,6 @@ async def get_feed_apis():
 
 # feed router 에 상세 path 추가
 feed_router.include_router(notification.router)
-feed_router.include_router(profile.router)
 feed_router.include_router(post.router)
 
 # app 에 추가
