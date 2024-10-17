@@ -1,6 +1,8 @@
 .PHONY: lint
+PYLINT := .venv/bin/pylint
+
 lint:
-	pylint **/*.py
+	pylint app/*py app/**/*.py --output-format=colorized
 
 .PHONY: generate-requirements
 generate-requirements:

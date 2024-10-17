@@ -8,7 +8,7 @@ from fastapi import FastAPI, APIRouter
 from starlette_context import context
 from starlette_context.middleware import ContextMiddleware
 from starlette.responses import Response
-from routers import notification, post
+from app.routers import post,notification
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +84,8 @@ async def get_feed_apis():
     }
 
 # feed router 에 상세 path 추가
-feed_router.include_router(notification.router)
 feed_router.include_router(post.router)
+feed_router.include_router(notification.router)
 
 # app 에 추가
 app.include_router(feed_router)

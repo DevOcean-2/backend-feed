@@ -2,9 +2,9 @@
 피드의 알림 관련 API
 """
 from typing import List
-
 from fastapi import APIRouter
-from pydantic import BaseModel
+
+from app.schemas import notification as noti_schema
 
 router = APIRouter(
     prefix="/notifications",
@@ -13,15 +13,7 @@ router = APIRouter(
 )
 
 
-class Notification(BaseModel):
-    """
-    알림 모델
-    """
-    message: str
-    timestamp: str
-
-
-@router.get("", response_model=List[Notification])
+@router.get("", response_model=List[noti_schema.Notification])
 async def get_notifications(token: str):
     """
     전체 알림 리스트
@@ -32,18 +24,19 @@ async def get_notifications(token: str):
     return None
 
 
-@router.delete("/{notification_id}", response_model="")
+@router.delete("/{notification_id}")
 async def delete_notification(notification_id: str, token: str):
     """
     특정 알림 삭제
     :param notification_id:
+    :param token:
     :return:
     """
     print(notification_id, token)
     return {"message": "Successfully deleted a notification"}
 
 
-@router.delete("", response_model="")
+@router.delete("")
 async def delete_all_notifications(token: str):
     """
     전체 알림 삭제

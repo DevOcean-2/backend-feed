@@ -2,9 +2,9 @@
 피드의 포스팅 관련 API
 """
 from typing import List
-
 from fastapi import APIRouter
-from pydantic import BaseModel
+
+from app.schemas import post as post_schema
 
 router = APIRouter(
     prefix="/posts",
@@ -13,17 +13,7 @@ router = APIRouter(
 )
 
 
-class Post(BaseModel):
-    """
-    게시물 모델
-    """
-    post_id: int
-    user_id: int
-    content: str
-    likes: int = 0
-
-
-@router.get("", response_model=List[Post])
+@router.get("", response_model=List[post_schema.PostResponse])
 async def list_posts(user_id: str):
     """
     특정 유저의 전체 게시물 리스팅 API
@@ -34,7 +24,7 @@ async def list_posts(user_id: str):
     return None
 
 
-@router.get("/{post_id}", response_model=Post)
+@router.get("/{post_id}", response_model=post_schema.PostResponse)
 async def get_post(post_id: int):
     """
     특정 게시물 상세 조회 API
@@ -45,8 +35,8 @@ async def get_post(post_id: int):
     return None
 
 
-@router.post("", response_model="")
-async def create_post(post: Post, token: str):
+@router.post("")
+async def create_post(post: post_schema.PostCreate, token: str):
     """
     게시물 생성 API
     :param post:
@@ -57,8 +47,8 @@ async def create_post(post: Post, token: str):
     return {"message": "Successfully created a post"}
 
 
-@router.put("/{post_id}", response_model="")
-async def update_post(post: Post, token: str):
+@router.put("/{post_id}")
+async def update_post(post: post_schema.PostUpdate, token: str):
     """
     본인 게시물 수정 API
     :param post:
@@ -69,7 +59,7 @@ async def update_post(post: Post, token: str):
     return {"message": "Successfully updated a post"}
 
 
-@router.post("/{post_id}/like", response_model="")
+@router.post("/{post_id}/like")
 async def like_post(post_id: int):
     """
     게시물 좋아요 API
@@ -80,7 +70,7 @@ async def like_post(post_id: int):
     return {"message": "Successfully liked a post"}
 
 
-@router.delete("/{post_id}", response_model="")
+@router.delete("/{post_id}")
 async def delete_post(post_id: int, token: str):
     """
     게시물 삭제 API
