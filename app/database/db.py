@@ -3,6 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sshtunnel import SSHTunnelForwarder
@@ -43,7 +44,7 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:

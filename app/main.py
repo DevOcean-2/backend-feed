@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from starlette_context import context
 from starlette_context.middleware import ContextMiddleware
 from starlette.responses import Response
+
+from app.database import db
 from app.routers import post,notification
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,13 @@ def get_config():
     """
     return Settings()
 
+
+# 테이블 생성 (만들 때 모델 import 하고 해야함)
+try:
+    db.Base.metadata.create_all(bind=db.engine)
+    print("Tables created or already exist.")
+except Exception as e:
+    print(f"Error creating tables: {e}")
 
 # fastAPI app 생성
 app = FastAPI(
@@ -52,7 +61,7 @@ async def http_log(request, call_next):
     response = await call_next(request)
     response_body = b''
     log_uuid = str(uuid.uuid1())[:8]
-    # Combine async response chunk
+
     async for chunk in response.body_iterator:
         response_body += chunk
     logger.info("Log ID : %s - Request URL : %s %s",
