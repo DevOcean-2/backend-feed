@@ -31,7 +31,8 @@ async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Dep
 
 
 @router.post("")
-async def create_post(post: post_schema.PostCreate, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
+async def create_post(post: post_schema.PostCreate,
+                      token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     게시물 생성 API
     :param post:

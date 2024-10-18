@@ -33,11 +33,7 @@ def get_config():
 
 
 # 테이블 생성 (만들 때 모델 import 하고 해야함)
-try:
-    db.Base.metadata.create_all(bind=db.engine)
-    print("Tables created or already exist.")
-except Exception as e:
-    print(f"Error creating tables: {e}")
+db.Base.metadata.create_all(bind=db.engine)
 
 # fastAPI app 생성
 app = FastAPI(

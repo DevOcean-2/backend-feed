@@ -1,12 +1,16 @@
+"""
+database 터널링 & 세션 생성
+"""
 import atexit
 import os
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
+from paramiko.ssh_exception import SSHException
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sshtunnel import SSHTunnelForwarder
+from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 from sqlalchemy import create_engine
 
 load_dotenv()
@@ -31,7 +35,7 @@ if os.getenv("ENV") == "local-dev":
     try:
         server.start()  # SSH 터널 시작
         print("SSH Tunnel established")
-    except Exception as e:
+    except BaseSSHTunnelForwarderError as e:
         print(f"Error establishing SSH tunnel: {e}")
     atexit.register(server.stop)
 
@@ -41,11 +45,14 @@ Base = declarative_base()
 
 
 def get_db():
+    """
+    db 세션 생성
+    """
     db = SessionLocal()
     try:
         yield db
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
     finally:
         db.close()
