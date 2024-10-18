@@ -11,6 +11,17 @@
    ```shell
    pip3 install -r requirements.txt
    ```
+3. 로컬 개발 시 DB 설정
+   ./app/database 폴더에 .env, balbam-aws.pem 파일 추가
+   ```
+   DATABASE_URL=postgresql://postgres:balbalm07@127.0.0.1:6543/balbalm
+   SSH_HOST=ec2-52-78-173-191.ap-northeast-2.compute.amazonaws.com
+   SSH_USER=ubuntu
+   SSH_KEY=balbalm-aws.pem
+   DB_HOST=balbalm-db.ch6k662g0l8s.ap-northeast-2.rds.amazonaws.com
+   DB_PORT=5432
+   ENV=local-dev
+   ```
 
 ## 개발
 1. 브랜치

@@ -4,7 +4,9 @@
 from typing import List
 from fastapi import APIRouter, Depends
 from fastapi_jwt_auth import AuthJWT
+from sqlalchemy.orm import Session
 
+from app.database.db import get_db
 from app.schemas import post as post_schema
 
 router = APIRouter(
@@ -15,28 +17,30 @@ router = APIRouter(
 
 
 @router.get("", response_model=List[post_schema.PostResponse])
-async def list_posts(user_id: str, token: AuthJWT = Depends()):
+async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     특정 유저의 전체 게시물 리스팅 API
     :param user_id:
     :param token:
+    :param db:
     :return:
     """
     token.jwt_required()
-    print(user_id)
+    print(user_id, db)
     return None
 
 
 @router.post("")
-async def create_post(post: post_schema.PostCreate, token: AuthJWT = Depends()):
+async def create_post(post: post_schema.PostCreate, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     게시물 생성 API
     :param post:
     :param token:
+    :param db:
     :return:
     """
     token.jwt_required()
-    print(post)
+    print(post, db)
     return {"message": "Successfully created a post"}
 
 
