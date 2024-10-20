@@ -12,7 +12,7 @@ from starlette_context.middleware import ContextMiddleware
 from starlette.responses import Response
 
 from app.database import db
-from app.routers import post,notification
+from app.routers import post, notification
 
 logger = logging.getLogger(__name__)
 

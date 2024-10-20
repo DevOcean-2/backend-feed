@@ -6,11 +6,11 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
-from paramiko.ssh_exception import SSHException
+from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 from sqlalchemy import create_engine
 
 load_dotenv()
