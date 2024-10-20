@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[noti_schema.Notification])
+@router.get("", response_model=List[noti_schema.NotiResponse])
 async def get_notifications(token: AuthJWT = Depends()):
     """
     전체 알림 리스트
