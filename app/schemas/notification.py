@@ -22,7 +22,7 @@ class NotiTypeFeed(BaseModel):
     """
     피드 알림 모델
     """
-    feed_id: int
+    post_id: int
     likes: Optional[List[Like]]
 
 

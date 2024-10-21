@@ -15,12 +15,13 @@ class Post(Base):
     """
     __tablename__ = 'posts'
 
-    post_id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, index=True)
     content = Column(String, nullable=True)
     uploaded_at = Column(DateTime, default=datetime.now(UTC))
     image_urls = Column(JSONB)
-    likes = relationship("Like", back_populates="post")
+
+    likes = relationship("Like", back_populates="post", cascade="all, delete-orphan")
 
 
 class Like(Base):
@@ -30,8 +31,9 @@ class Like(Base):
     __tablename__ = 'likes'
 
     id = Column(Integer, primary_key=True, index=True)
-    post_id = Column(Integer, ForeignKey('posts.post_id'), index=True)
+    post_id = Column(Integer, ForeignKey('posts.id'), index=True)
     user_id = Column(String, index=True)
     user_image_url = Column(String, nullable=True)
 
     post = relationship("Post", back_populates="likes")
+    noti = relationship("Notification", back_populates="likes", cascade="all, delete-orphan")
