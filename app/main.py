@@ -3,6 +3,7 @@ main.py
 """
 
 import logging
+import os
 import uuid
 from fastapi import FastAPI, APIRouter
 from fastapi_jwt_auth import AuthJWT
@@ -21,7 +22,7 @@ class Settings(BaseModel):
     """
     AuthJWT config setting
     """
-    authjwt_secret_key: str = "test"
+    authjwt_secret_key: str = os.getenv("JWT_SECRET_KEY")
 
 
 @AuthJWT.load_config

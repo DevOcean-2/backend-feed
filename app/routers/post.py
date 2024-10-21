@@ -7,7 +7,9 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
-from app.schemas import post as post_schema
+from app.schemas.post import PostResponse, PostCreate, PostUpdate
+from app.services.post import list_user_posts, create_new_post
+from app.utils.token import get_social_id
 
 router = APIRouter(
     prefix="/posts",
@@ -16,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[post_schema.PostResponse])
+@router.get("", response_model=List[PostResponse])
 async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     특정 유저의 전체 게시물 리스팅 API
@@ -26,12 +28,12 @@ async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Dep
     :return:
     """
     token.jwt_required()
-    print(user_id, db)
-    return None
+
+    return list_user_posts(user_id, db)
 
 
-@router.post("")
-async def create_post(post: post_schema.PostCreate,
+@router.post("", response_model=PostResponse)
+async def create_post(post: PostCreate,
                       token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     게시물 생성 API
@@ -41,12 +43,13 @@ async def create_post(post: post_schema.PostCreate,
     :return:
     """
     token.jwt_required()
-    print(post, db)
-    return {"message": "Successfully created a post"}
+    user_id = get_social_id(token)
+
+    return create_new_post(user_id, db, post)
 
 
 @router.put("/{post_id}")
-async def update_post(post: post_schema.PostUpdate, token: AuthJWT = Depends()):
+async def update_post(post: PostUpdate, token: AuthJWT = Depends()):
     """
     본인 게시물 수정 API
     :param post:

@@ -32,7 +32,8 @@ class Like(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey('posts.id'), index=True)
-    user_id = Column(String, index=True)
+    user_id = Column(String)
+    nickname = Column(String)
     user_image_url = Column(String, nullable=True)
 
     post = relationship("Post", back_populates="likes")
