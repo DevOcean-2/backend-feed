@@ -20,6 +20,7 @@ class Post(Base):
     content = Column(String, nullable=True)
     uploaded_at = Column(DateTime, default=datetime.now(UTC))
     image_urls = Column(JSONB)
+    hashtags = Column(JSONB)
 
     likes = relationship("Like", back_populates="post", cascade="all, delete-orphan")
 

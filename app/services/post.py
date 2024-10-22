@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.schemas.post import PostResponse, Like, PostCreate, PostUpdate
 from app.models.post import Post as PostTable
 from app.models.post import Like as LikeTable
+from app.utils.parser import extract_hashtags
 
 
 def list_posts(user_id: str, db: Session) -> List[PostResponse]:
@@ -46,11 +47,13 @@ def create_post(user_id: str, db: Session, post_create: PostCreate) -> PostRespo
     """
     새 게시물 생성 로직
     """
+    hashtags = extract_hashtags(post_create.content)
     post = PostTable(
         user_id=user_id,
         content=post_create.content,
         uploaded_at=datetime.now(),
-        image_urls=post_create.image_urls
+        image_urls=post_create.image_urls,
+        hashtags=hashtags
     )
 
     db.add(post)
