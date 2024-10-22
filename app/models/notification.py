@@ -1,15 +1,19 @@
 """
 알림 데이터베이스 모델
 """
+from datetime import datetime, UTC
+
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Enum
 from sqlalchemy.orm import relationship
-from datetime import datetime, UTC
 
 from app.schemas.notification import NotiType
 from app.database.db import Base
 
 
 class Notification(Base):
+    """
+    알림 테이블 모델
+    """
     __tablename__ = 'notifications'
 
     id = Column(Integer, primary_key=True, index=True)
