@@ -31,7 +31,7 @@ class PostCreate(BaseModel):
     """
     게시물 생성 모델
     """
-    image_url: List[HttpUrl]
+    image_urls: List[HttpUrl]
     content: Optional[str]
 
 

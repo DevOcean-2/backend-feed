@@ -28,21 +28,15 @@ def list_posts(user_id: str, db: Session) -> List[PostResponse]:
         except ValidationError:
             image_urls = []
         # 게시물 좋아요 리스트 긁어오기
-        likes: List[LikeTable] = db.query(LikeTable).filter(LikeTable.post_id == post.id).all()
-        like_responses = []
-        for like in likes:
-            like_responses.append(Like(
-                user_id=like.user_id,
-                nickname=like.nickname,
-                profile_image_url=like.user_image_url
-            ))
+        likes = list_post_likes(post.id, db)
+
         # 리스폰스 생성
         post_list.append(PostResponse(
             post_id=post.id,
             image_urls=image_urls,
             content=post.content,
             uploaded_at=post.uploaded_at,
-            liked_by=like_responses,
+            liked_by=likes,
         ))
 
     return post_list
@@ -56,7 +50,7 @@ def create_post(user_id: str, db: Session, post_create: PostCreate) -> PostRespo
         user_id=user_id,
         content=post_create.content,
         uploaded_at=datetime.now(),
-        image_urls=post_create.image_url
+        image_urls=post_create.image_urls
     )
 
     db.add(post)
@@ -74,7 +68,7 @@ def update_post(user_id: str, post_id: int, db: Session, post_update: PostUpdate
     """
     게시물 내용 수정 로직
     """
-    post = db.query(PostTable).filter(PostTable.id == post_id).first()
+    post: PostTable = db.query(PostTable).filter(PostTable.id == post_id).first()
     if user_id != post.user_id:
         raise HTTPException(status_code=403, detail="Forbidden user")
 
@@ -82,8 +76,12 @@ def update_post(user_id: str, post_id: int, db: Session, post_update: PostUpdate
         raise HTTPException(status_code=404, detail="Post not found")
 
     post.content = post_update.content
-    db.commit()
-    db.refresh(post)
+    try:
+        db.commit()
+        db.refresh(post)
+    except IntegrityError:
+        db.rollback()
+        raise
 
     return PostResponse().from_orm(post)
 
@@ -101,3 +99,67 @@ def delete_post(user_id: str, post_id: int, db: Session) -> None:
 
     db.delete(post)
     db.commit()
+
+
+def like_post(post_id: int, db: Session, like_create: Like) -> None:
+    """
+    게시물 좋아요 로직
+    """
+    post = db.query(PostTable).filter(PostTable.id == post_id).first()
+
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    existing_like = (db.query(LikeTable).filter(LikeTable.post_id == post_id,
+                                                LikeTable.user_id == like_create.user_id).first())
+
+    if existing_like:
+        raise HTTPException(status_code=400, detail="Like conflict")
+
+    like = LikeTable(
+        post_id=post_id,
+        user_id=like_create.user_id,
+        nickname=like_create.nickname,
+        user_image_url=like_create.profile_image_url
+    )
+    try:
+        db.commit()
+        db.refresh(like)
+    except IntegrityError:
+        db.rollback()
+        raise
+
+
+def unlike_post(post_id: int, user_id: str, db: Session) -> None:
+    """
+    게시물 좋아요 취소 로직
+    """
+    post = db.query(PostTable).filter(PostTable.id == post_id).first()
+
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    like = (db.query(LikeTable).
+            filter(LikeTable.post_id == post_id, LikeTable.user_id == user_id).first())
+
+    if like is None:
+        raise HTTPException(status_code=404, detail="Like not found")
+
+    db.delete(like)
+    db.commit()
+
+
+def list_post_likes(post_id: int, db: Session) -> List[Like]:
+    """
+    게시물의 좋아요 리스팅
+    """
+    likes: List[LikeTable] = db.query(LikeTable).filter(LikeTable.post_id == post_id).all()
+    like_responses = []
+    for like in likes:
+        like_responses.append(Like(
+            user_id=like.user_id,
+            nickname=like.nickname,
+            profile_image_url=like.user_image_url
+        ))
+
+    return like_responses

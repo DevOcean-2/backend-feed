@@ -7,7 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
-from app.schemas.post import PostResponse, PostCreate, PostUpdate
+from app.schemas.post import PostResponse, PostCreate, PostUpdate, Like
 from app.services import post as post_service
 from app.utils.token import get_social_id
 
@@ -29,7 +29,7 @@ async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Dep
     """
     token.jwt_required()
 
-    return list_posts(user_id, db)
+    return post_service.list_posts(user_id, db)
 
 
 @router.post("", response_model=PostResponse)
@@ -48,7 +48,7 @@ async def create_post(post: PostCreate,
     return post_service.create_post(user_id, db, post)
 
 
-@router.put("/{post_id}")
+@router.put("/{post_id}", response_model=PostResponse)
 async def update_post(post_id: int, post: PostUpdate,
                       token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
@@ -82,26 +82,33 @@ async def delete_post(post_id: int, token: AuthJWT = Depends(), db: Session = De
 
 
 @router.post("/{post_id}/likes")
-async def like_post(post_id: int, token: AuthJWT = Depends()):
+async def like_post(post_id: int, like: Like,
+                    token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     게시물 좋아요 API
     :param post_id:
+    :param like:
     :param token:
+    :param db:
     :return:
     """
     token.jwt_required()
-    print(post_id)
+    post_service.like_post(post_id, db, like)
+
     return {"message": "Successfully liked a post"}
 
 
 @router.delete("/{post_id}/likes")
-async def unlike_post(post_id: int, token: AuthJWT = Depends()):
+async def unlike_post(post_id: int, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     게시물 좋아요 취소 API
     :param post_id:
     :param token:
+    :param db:
     :return:
     """
     token.jwt_required()
-    print(post_id)
+    user_id = get_social_id(token)
+    post_service.unlike_post(post_id, user_id, db)
+
     return {"message": "Successfully unliked a post"}
