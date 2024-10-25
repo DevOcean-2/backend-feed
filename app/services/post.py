@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List
 
 from fastapi import HTTPException
-from pydantic import HttpUrl, ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,18 +22,13 @@ def list_posts(user_id: str, db: Session) -> List[PostResponse]:
     posts: List[PostTable] = db.query(PostTable).filter(PostTable.user_id == user_id).all()
     post_list = []
     for post in posts:
-        # url 파싱
-        try:
-            image_urls = [HttpUrl(url) for url in post.image_urls]  # 유효성 검사와 변환
-        except ValidationError:
-            image_urls = []
         # 게시물 좋아요 리스트 긁어오기
         likes = list_post_likes(post.id, db)
 
         # 리스폰스 생성
         post_list.append(PostResponse(
             post_id=post.id,
-            image_urls=image_urls,
+            image_urls=post.image_urls,
             content=post.content,
             uploaded_at=post.uploaded_at,
             liked_by=likes,
@@ -64,7 +58,15 @@ def create_post(user_id: str, db: Session, post_create: PostCreate) -> PostRespo
         db.rollback()
         raise
 
-    return PostResponse().from_orm(post)
+    likes = list_post_likes(post.id, db)
+
+    return PostResponse(
+        post_id=post.id,
+        image_urls=post.image_urls,
+        content=post.content,
+        uploaded_at=post.uploaded_at,
+        liked_by=likes,
+    )
 
 
 def update_post(user_id: str, post_id: int, db: Session, post_update: PostUpdate) -> PostResponse:
@@ -86,7 +88,15 @@ def update_post(user_id: str, post_id: int, db: Session, post_update: PostUpdate
         db.rollback()
         raise
 
-    return PostResponse().from_orm(post)
+    likes = list_post_likes(post.id, db)
+
+    return PostResponse(
+        post_id=post.id,
+        image_urls=post.image_urls,
+        content=post.content,
+        uploaded_at=post.uploaded_at,
+        liked_by=likes,
+    )
 
 
 def delete_post(user_id: str, post_id: int, db: Session) -> None:

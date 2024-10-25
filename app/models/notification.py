@@ -18,10 +18,13 @@ class Notification(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, index=True)
-    noti_type = Column(Enum(NotiType), nullable=False)
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.now(UTC))
-    mission_id = Column(Integer, nullable=True)
-    like_id = Column(Integer, ForeignKey('likes.id'), nullable=True)
 
-    likes = relationship("Like", back_populates="notifications")
+    noti_type = Column(Enum(NotiType), nullable=False)
+
+    mission = Column(String, nullable=True)
+    is_success = Column(Boolean, nullable=True)
+
+    post_id = Column(Integer, ForeignKey('posts.id'), nullable=True)
+    like_id = Column(Integer, ForeignKey('likes.id'), nullable=True)

@@ -8,12 +8,15 @@ import uuid
 from fastapi import FastAPI, APIRouter
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
+# from sqlalchemy import MetaData, Table, inspect
 from starlette_context import context
 from starlette_context.middleware import ContextMiddleware
 from starlette.responses import Response
 
 from app.database import db
 from app.routers import post, notification
+# from app.models.notification import *
+# from app.models.post import *
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ class Settings(BaseModel):
     """
     AuthJWT config setting
     """
-    authjwt_secret_key: str = os.getenv("JWT_SECRET_KEY")
+    authjwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "test_token")
 
 
 @AuthJWT.load_config
@@ -33,8 +36,17 @@ def get_config():
     return Settings()
 
 
+# 테이블 삭제용
+# metadata = MetaData()
+# table = Table('posts', metadata, autoload_with=db.engine)
+# table.drop(db.engine)
+
 # 테이블 생성 (만들 때 모델 import 하고 해야함)
 db.Base.metadata.create_all(bind=db.engine)
+
+# 테이블 확인용
+# inspector = inspect(db.engine)
+# print(inspector.get_columns("posts"))
 
 # fastAPI app 생성
 app = FastAPI(

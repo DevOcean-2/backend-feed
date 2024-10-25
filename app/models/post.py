@@ -38,4 +38,3 @@ class Like(Base):
     user_image_url = Column(String, nullable=True)
 
     post = relationship("Post", back_populates="likes")
-    noti = relationship("Notification", back_populates="likes", cascade="all, delete-orphan")
