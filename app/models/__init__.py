@@ -10,4 +10,4 @@ Post.noti = relationship("Notification", back_populates="post", cascade="all, de
 Like.noti = relationship("Notification", back_populates="like", cascade="all, delete-orphan")
 
 Notification.post = relationship('Post', back_populates='noti')
-Notification.like =relationship("Like", back_populates="noti")
+Notification.like = relationship("Like", back_populates="noti")

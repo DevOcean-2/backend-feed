@@ -172,7 +172,7 @@ def list_post_likes(post_id: int, db: Session) -> List[Like]:
         like_responses.append(Like(
             user_id=like.user_id,
             nickname=like.nickname,
-            profile_image_url=like.user_image_url
+            profile_image_url=like.profile_image_url
         ))
 
     return like_responses
