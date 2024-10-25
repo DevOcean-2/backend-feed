@@ -1,7 +1,7 @@
 """
 게시물 서비스 로직
 """
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List
 
 from fastapi import HTTPException
@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.schemas.post import PostResponse, Like, PostCreate, PostUpdate
 from app.models.post import Post as PostTable
 from app.models.post import Like as LikeTable
+from app.models.notification import Notification as NotiTable
 from app.utils.parser import extract_hashtags
 
 
@@ -50,8 +51,8 @@ def create_post(user_id: str, db: Session, post_create: PostCreate) -> PostRespo
         hashtags=hashtags
     )
 
-    db.add(post)
     try:
+        db.add(post)
         db.commit()
         db.refresh(post)
     except IntegrityError:
@@ -110,15 +111,19 @@ def delete_post(user_id: str, post_id: int, db: Session) -> None:
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    db.delete(post)
-    db.commit()
+    try:
+        db.delete(post)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise
 
 
 def like_post(post_id: int, db: Session, like_create: Like) -> None:
     """
     게시물 좋아요 로직
     """
-    post = db.query(PostTable).filter(PostTable.id == post_id).first()
+    post: PostTable = db.query(PostTable).filter(PostTable.id == post_id).first()
 
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -133,11 +138,27 @@ def like_post(post_id: int, db: Session, like_create: Like) -> None:
         post_id=post_id,
         user_id=like_create.user_id,
         nickname=like_create.nickname,
-        user_image_url=like_create.profile_image_url
+        profile_image_url=like_create.profile_image_url
     )
     try:
+        db.add(like)
         db.commit()
         db.refresh(like)
+    except IntegrityError:
+        db.rollback()
+        raise
+
+    notification = NotiTable(
+        user_id=post.user_id,
+        is_read=False,
+        created_at=datetime.now(UTC),
+        post_id=post_id,
+        like_id=like.id
+    )
+    try:
+        db.add(notification)
+        db.commit()
+        db.refresh(notification)
     except IntegrityError:
         db.rollback()
         raise
@@ -154,12 +175,18 @@ def unlike_post(post_id: int, user_id: str, db: Session) -> None:
 
     like = (db.query(LikeTable).
             filter(LikeTable.post_id == post_id, LikeTable.user_id == user_id).first())
+    notification = db.query(NotiTable).filter(NotiTable.like_id == like.id).first()
 
     if like is None:
         raise HTTPException(status_code=404, detail="Like not found")
 
-    db.delete(like)
-    db.commit()
+    try:
+        db.delete(like)
+        db.delete(notification)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise
 
 
 def list_post_likes(post_id: int, db: Session) -> List[Like]:
