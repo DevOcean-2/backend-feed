@@ -62,7 +62,6 @@ def mark_notification_as_read(post_id: int, user_id: str, db: Session) -> None:
 
     try:
         db.commit()
-        db.refresh(notifications)
     except IntegrityError:
         db.rollback()
         raise
