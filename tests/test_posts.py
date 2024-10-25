@@ -56,6 +56,17 @@ def test_delete_post(my_token, post_id):
     assert response.status_code == 200
 
 
+def test_list_posts_with_hashtag(my_token):
+    response = client.get(
+        "http://127.0.0.1:8000/feed/posts/hashtag/lol",
+        headers={"Authorization": f"Bearer {my_token}"}
+    )
+    print(response.json())
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["post_id"] == 6
+
+
 def test_like_post(friend_token):
     response = client.post(
         "http://127.0.0.1:8000/feed/posts/6/likes",

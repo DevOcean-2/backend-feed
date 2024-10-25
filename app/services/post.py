@@ -81,7 +81,9 @@ def update_post(user_id: str, post_id: int, db: Session, post_update: PostUpdate
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
 
+    hashtags = extract_hashtags(post_update.content)
     post.content = post_update.content
+    post.hashtags = hashtags
     try:
         db.commit()
         db.refresh(post)
@@ -117,6 +119,26 @@ def delete_post(user_id: str, post_id: int, db: Session) -> None:
     except IntegrityError:
         db.rollback()
         raise
+
+
+def list_posts_with_hashtag(hashtag: str, db: Session) -> List[PostResponse]:
+    posts: List[PostTable] = db.query(PostTable).filter(PostTable.hashtags.contains([hashtag])).all()
+
+    post_list = []
+    for post in posts:
+        # 게시물 좋아요 리스트 긁어오기
+        likes = list_post_likes(post.id, db)
+
+        # 리스폰스 생성
+        post_list.append(PostResponse(
+            post_id=post.id,
+            image_urls=post.image_urls,
+            content=post.content,
+            uploaded_at=post.uploaded_at,
+            liked_by=likes,
+        ))
+
+    return post_list
 
 
 def like_post(post_id: int, db: Session, like_create: Like) -> None:

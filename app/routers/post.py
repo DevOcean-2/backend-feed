@@ -32,6 +32,20 @@ async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Dep
     return post_service.list_posts(user_id, db)
 
 
+@router.get("/hashtag/{hashtag}", response_model=List[PostResponse])
+async def list_posts_with_hashtag(hashtag: str, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    """
+    특정 유저의 전체 게시물 리스팅 API
+    :param hashtag:
+    :param token:
+    :param db:
+    :return:
+    """
+    token.jwt_required()
+
+    return post_service.list_posts_with_hashtag(hashtag, db)
+
+
 @router.post("", response_model=PostResponse)
 async def create_post(post: PostCreate,
                       token: AuthJWT = Depends(), db: Session = Depends(get_db)):
