@@ -53,7 +53,9 @@ app = FastAPI(
     title="Balbalm Feed Backend",
     description="backend for balbalm feed service",
     version="1.0-beta",
-    openapi_url="/openapi.json",
+    openapi_url="/feed/openapi.json",
+    docs_url="/feed/docs",
+    redoc_url="/feed/redoc",
 )
 
 app.logger = logger
@@ -94,6 +96,28 @@ feed_router = APIRouter(
     prefix="/feed",
     tags=["Feed"]
 )
+
+
+@feed_router.get("", response_model=dict, summary="Feed API List")
+async def get_feed_apis():
+    """
+    USER 관련 모든 API 목록을 반환
+    """
+    return {
+        "message": "Welcome to the Balbalm User API!",
+        "endpoints": {
+            "GET /feed": "Feed API List",
+            "GET /feed/posts": "특정 유저의 전체 게시물 리스팅 API",
+            "GET /feed/posts/hashtag/{hashtag}": "해시태그 게시물 리스팅 API",
+            "POST /feed/posts": "게시물 생성 API",
+            "PUT /feed/posts/{post_id}": "본인 게시물 수정 API",
+            "DELETE /feed/posts/{post_id}": "게시물 삭제 API",
+            "POST /feed/posts/{post_id}/likes": "게시물 좋아요 API",
+            "DELETE /feed/posts/{post_id}/likes": "게시물 좋아요 취소 API",
+            "GET /feed/notifications": "전체 알림 리스트",
+            "PUT /feed/notifications/{post_id}/read": "특정 알림을 읽음 상태로 변경"
+        }
+    }
 
 # feed router 에 상세 path 추가
 feed_router.include_router(post.router)
