@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: balbalm-feed
+  namespace: devocean
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      app: balbalm-feed
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: balbalm-feed
+    spec:
+      containers:
+      - image: 147997130241.dkr.ecr.ap-northeast-2.amazonaws.com/balbalm/backend-feed:latest
+        imagePullPolicy: Always
+        name: balbalm-feed
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 250m
+            ephemeral-storage: 2Gi
+            memory: 512Mi
+        securityContext:
+          capabilities:
+            drop:
+            - NET_RAW
+            - NET_ADMIN
+          seccompProfile:
+            type: RuntimeDefault
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
