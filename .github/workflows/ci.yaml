@@ -30,8 +30,16 @@ jobs:
           --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
           -t 147997130241.dkr.ecr.ap-northeast-2.amazonaws.com/balbalm/backend-feed:latest
 
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.AWS_ECR_PASSWORD }}" | docker login --username AWS --password-stdin 147997130241.dkr.ecr.ap-northeast-2.amazonaws.com
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Push Docker image
         run: |
