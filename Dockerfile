@@ -9,10 +9,12 @@ ENV PYTHONUNBUFFERED=1
 ENV JWT_SECRET_KEY=$JWT_SECRET_KEY
 ENV DATABASE_URL=$DATABASE_URL
 
+WORKDIR /balbalm
+
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY /app /app
+COPY /app ./app
 
 EXPOSE 8000
 
