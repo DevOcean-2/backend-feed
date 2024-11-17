@@ -29,6 +29,7 @@ def list_posts(user_id: str, db: Session) -> List[PostResponse]:
         # 리스폰스 생성
         post_list.append(PostResponse(
             post_id=post.id,
+            user_id=post.user_id,
             image_urls=post.image_urls,
             content=post.content,
             uploaded_at=post.uploaded_at,
@@ -63,6 +64,7 @@ def create_post(user_id: str, db: Session, post_create: PostCreate) -> PostRespo
 
     return PostResponse(
         post_id=post.id,
+        user_id=post.user_id,
         image_urls=post.image_urls,
         content=post.content,
         uploaded_at=post.uploaded_at,
@@ -95,6 +97,7 @@ def update_post(user_id: str, post_id: int, db: Session, post_update: PostUpdate
 
     return PostResponse(
         post_id=post.id,
+        user_id=post.user_id,
         image_urls=post.image_urls,
         content=post.content,
         uploaded_at=post.uploaded_at,
@@ -132,6 +135,7 @@ def list_posts_with_hashtag(hashtag: str, db: Session) -> List[PostResponse]:
         # 리스폰스 생성
         post_list.append(PostResponse(
             post_id=post.id,
+            user_id=post.user_id,
             image_urls=post.image_urls,
             content=post.content,
             uploaded_at=post.uploaded_at,

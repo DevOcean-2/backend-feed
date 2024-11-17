@@ -21,6 +21,7 @@ class PostResponse(BaseModel):
     게시물 리스폰스 모델
     """
     post_id: int
+    user_id: str
     image_urls: List[HttpUrl]
     content: Optional[str]
     uploaded_at: datetime
