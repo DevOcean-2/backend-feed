@@ -7,7 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
-from app.schemas.post import PostResponse, PostCreate, PostUpdate, Like
+from app.schemas.post import PostResponse, PostCreate, PostUpdate
 from app.services import post as post_service
 from app.utils.token import get_social_id
 
@@ -58,7 +58,6 @@ async def create_post(post: PostCreate,
     """
     token.jwt_required()
     user_id = get_social_id(token)
-
     return post_service.create_post(user_id, db, post)
 
 
@@ -94,35 +93,27 @@ async def delete_post(post_id: int, token: AuthJWT = Depends(), db: Session = De
 
     return {"message": "Successfully deleted a post"}
 
-
 @router.post("/{post_id}/likes")
-async def like_post(post_id: int, like: Like,
-                    token: AuthJWT = Depends(), db: Session = Depends(get_db)):
+async def toggle_like(post_id: int, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
-    게시물 좋아요 API
-    :param post_id:
-    :param like:
-    :param token:
-    :param db:
-    :return:
-    """
-    token.jwt_required()
-    post_service.like_post(post_id, db, like)
-
-    return {"message": "Successfully liked a post"}
-
-
-@router.delete("/{post_id}/likes")
-async def unlike_post(post_id: int, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
-    """
-    게시물 좋아요 취소 API
-    :param post_id:
-    :param token:
-    :param db:
-    :return:
+    게시물 좋아요 토글 API
+    :param post_id: 게시물 ID
+    :param token: JWT 토큰
+    :param db: 데이터베이스 세션
+    :return: 토글 결과 메시지와 좋아요 상태
     """
     token.jwt_required()
     user_id = get_social_id(token)
-    post_service.unlike_post(post_id, user_id, db)
+    result = post_service.toggle_post_like(post_id, user_id, db)
+    return result
 
-    return {"message": "Successfully unliked a post"}
+@router.get("/famous")
+async def famous_feeds(token: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    """
+    인기 멍멍이 피드 추천(총 5명의 강아지 피드 정보를 랜덤하게 반환)
+    :param token:
+    :param db:
+    :return:
+    """
+    token.jwt_required()
+    return post_service.famous_posts(db)
