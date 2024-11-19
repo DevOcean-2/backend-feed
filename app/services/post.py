@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, cast, String
 from fastapi import HTTPException
 
-from app.schemas.post import PostResponse, Like, PostCreate, PostUpdate
+from app.schemas.post import PostResponse, FamousResponse, Like, LikeToggle, PostCreate, PostUpdate
 from app.models.post import Post as PostTable
 from app.models.post import Like as LikeTable
 from app.models.post import User as UserTable
@@ -37,7 +37,7 @@ def list_posts(user_id: str, db: Session) -> List[PostResponse]:
         ))
     return post_list
 
-def famous_posts(db: Session) -> List[PostResponse]:
+def famous_posts(db: Session) -> List[FamousResponse]:
     """
     좋아요 수 기준 상위 5개의 인기 게시물 반환 (사용자 이름 포함)
     """
@@ -62,13 +62,13 @@ def famous_posts(db: Session) -> List[PostResponse]:
     post_list = []
     for post, user_name, _ in random_posts:  # user_name 추가
         likes = list_post_likes(post.id, db)
-        post_list.append({
-            "post_id" : post.id,
-            "user_id" : post.user_id,
-            "user_name" : user_name,
-            "image_urls" : post.image_urls,
-            "liked_by" : likes
-        })
+        post_list.append(FamousResponse(
+            post_id=post.id,
+            user_id=post.user_id,
+            user_name=user_name,
+            image_urls=post.image_urls,
+            liked_by=likes
+        ))
     return post_list
 
 def create_post(user_id: str, db: Session, post_create: PostCreate) -> PostResponse:
@@ -193,7 +193,7 @@ def list_posts_with_hashtag(hashtag: str, db: Session) -> List[PostResponse]:
 def get_post_likes_count(post_id: int, db: Session) -> int:
     return db.query(LikeTable).filter(LikeTable.post_id == post_id).count()
 
-def toggle_post_like(post_id: int, user_id: str, db: Session) -> dict:
+def toggle_post_like(post_id: int, user_id: str, db: Session) -> LikeToggle:
     """
     게시물 좋아요 토글 로직
     """
@@ -215,11 +215,11 @@ def toggle_post_like(post_id: int, user_id: str, db: Session) -> dict:
                 db.delete(notification)
             db.delete(existing_like)
             db.commit()
-            return {
-                "message": "Successfully unliked a post",
-                "is_liked": False,
-                "likes_count": get_post_likes_count(post_id, db)
-            }
+            return LikeToggle(
+                message="Successfully unliked a post",
+                is_liked=False,
+                likes_count=get_post_likes_count(post_id, db)
+            )
         # 좋아요가 없으면 좋아요와 알림 추가
         like = LikeTable(
             post_id=post_id,
@@ -240,11 +240,11 @@ def toggle_post_like(post_id: int, user_id: str, db: Session) -> dict:
         db.commit()
         db.refresh(notification)
         
-        return {
-            "message": "Successfully liked a post",
-            "is_liked": True,
-            "likes_count": get_post_likes_count(post_id, db)
-        }
+        return LikeToggle(
+            message="Successfully liked a post",
+            is_liked=True,
+            likes_count=get_post_likes_count(post_id, db)
+        )
     except IntegrityError:
         db.rollback()
         raise
@@ -268,10 +268,9 @@ def list_post_likes(post_id: int, db: Session) -> List[Like]:
     )
     like_responses = []
     for like in likes:
-        like_responses.append({
-            "user_id" : like.user_id,
-            "nickname" : like.dog_name,
-            "profile_image_url" : like.photo_path
-        })
-
+        like_responses.append(Like(
+            user_id=like.user_id,
+            nickname=like.dog_name,
+            profile_image_url=like.photo_path
+        ))
     return like_responses

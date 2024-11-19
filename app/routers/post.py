@@ -7,7 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
-from app.schemas.post import PostResponse, PostCreate, PostUpdate
+from app.schemas.post import PostResponse, FamousResponse, LikeToggle, PostCreate, PostUpdate
 from app.services import post as post_service
 from app.utils.token import get_social_id
 
@@ -93,7 +93,7 @@ async def delete_post(post_id: int, token: AuthJWT = Depends(), db: Session = De
 
     return {"message": "Successfully deleted a post"}
 
-@router.post("/{post_id}/likes")
+@router.post("/{post_id}/likes", response_model=LikeToggle)
 async def toggle_like(post_id: int, token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     게시물 좋아요 토글 API
@@ -107,7 +107,7 @@ async def toggle_like(post_id: int, token: AuthJWT = Depends(), db: Session = De
     result = post_service.toggle_post_like(post_id, user_id, db)
     return result
 
-@router.get("/famous")
+@router.get("/famous", response_model=List[FamousResponse])
 async def famous_feeds(token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     인기 멍멍이 피드 추천(총 5명의 강아지 피드 정보를 랜덤하게 반환)
