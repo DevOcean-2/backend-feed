@@ -2,15 +2,12 @@
 게시물 서비스 로직
 """
 from datetime import datetime, UTC
+from random import sample
 from typing import List
-
-from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, cast, Integer, String
-import boto3, base64, io, os, uuid
-from dotenv import load_dotenv
-load_dotenv()
+from sqlalchemy import func, desc, cast, String
+from fastapi import HTTPException
 
 from app.schemas.post import PostResponse, Like, PostCreate, PostUpdate
 from app.models.post import Post as PostTable
@@ -19,6 +16,7 @@ from app.models.post import User as UserTable
 from app.models.post import UserAbstractProfile
 from app.models.notification import Notification as NotiTable
 from app.utils.parser import extract_hashtags
+from app.utils.image import upload_image_to_s3, create_s3_client
 
 def list_posts(user_id: str, db: Session) -> List[PostResponse]:
     """
@@ -56,12 +54,14 @@ def famous_posts(db: Session) -> List[PostResponse]:
         .outerjoin(LikeTable, PostTable.id == LikeTable.post_id)
         .group_by(PostTable.id, UserTable.name)
         .order_by(desc('like_count'))
-        .limit(5)
+        .limit(100) # 상위 100개를 가져오고
         .all()
     )
     
+    random_posts = sample(posts, min(5, len(posts))) # 5개를 랜덤하게 추출
+
     post_list = []
-    for post, user_name, like_count in posts:  # user_name 추가
+    for post, user_name, like_count in random_posts:  # user_name 추가
         likes = list_post_likes(post.id, db)
         post_list.append({
             "post_id" : post.id,
@@ -155,18 +155,17 @@ def delete_post(user_id: str, post_id: int, db: Session) -> None:
         raise HTTPException(status_code=403, detail="Forbidden user")
 
     try:
-        # S3에서 이미지들 삭제
+        db.delete(post) # DB에서 먼저 삭제 시도
+        # S3 이미지 삭제 시도
         s3_client = create_s3_client()
         for image_url in post.image_urls:
             try:
                 key = image_url.split('.com/')[-1]
                 s3_client.delete_object(Bucket='balm-bucket', Key=key)
             except Exception as e:
-                print(f"Failed to delete S3 image: {str(e)}")
-
-        # DB에서 게시물 삭제
-        db.delete(post)
-        db.commit()
+                db.rollback() # 이미지 삭제 실패시 DB 롤백
+                raise HTTPException(status_code=500, detail=f"Failed to delete image: {str(e)}")
+        db.commit() # 모든 작업 성공시 커밋
 
     except Exception as e:
         db.rollback()
@@ -279,47 +278,3 @@ def list_post_likes(post_id: int, db: Session) -> List[Like]:
         })
 
     return like_responses
-
-def create_s3_client():
-    """S3 클라이언트 생성"""
-    return boto3.client(
-        's3',
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY"),
-        aws_secret_access_key=os.getenv('AWS_SECRET_KEY'),
-        region_name='ap-northeast-2'
-    )
-
-def upload_image_to_s3(base64_string: str) -> str:
-    """
-    Base64 이미지를 S3에 업로드하고 URL 반환
-    """
-    try:
-        s3_client = create_s3_client()
-        bucket_name = 'balm-bucket'
-
-        # base64 디코딩
-        if 'base64,' in base64_string:
-            image_data = base64_string.split('base64,')[1]
-        else:
-            image_data = base64_string
-            
-        image_bytes = base64.b64decode(image_data)
-        
-        # S3에 업로드
-        file_id = str(uuid.uuid4())
-        key = f"images/feed/{file_id}.jpg"
-        
-        s3_client.upload_fileobj(
-            io.BytesIO(image_bytes),
-            bucket_name,
-            key,
-            ExtraArgs={
-                'ContentType': 'image/jpeg',
-                'CacheControl': 'max-age=31536000'
-            }
-        )
-        
-        return f"https://{bucket_name}.s3.ap-northeast-2.amazonaws.com/{key}"
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")

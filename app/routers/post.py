@@ -1,7 +1,7 @@
 """
 피드의 포스팅 관련 API
 """
-from typing import List, Annotated
+from typing import List
 from fastapi import APIRouter, Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
@@ -27,7 +27,7 @@ async def list_posts(user_id: str, token: AuthJWT = Depends(), db: Session = Dep
     :param db:
     :return:
     """
-    # token.jwt_required()
+    token.jwt_required()
 
     return post_service.list_posts(user_id, db)
 
@@ -108,12 +108,12 @@ async def toggle_like(post_id: int, token: AuthJWT = Depends(), db: Session = De
     return result
 
 @router.get("/famous")
-async def famous_feeds(db: Session = Depends(get_db)):
+async def famous_feeds(token: AuthJWT = Depends(), db: Session = Depends(get_db)):
     """
     인기 멍멍이 피드 추천(총 5명의 강아지 피드 정보를 랜덤하게 반환)
     :param token:
     :param db:
     :return:
     """
-    # token.jwt_required() # 인증이 필요 없지 않을까?
+    token.jwt_required()
     return post_service.famous_posts(db)
