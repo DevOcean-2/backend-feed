@@ -28,6 +28,8 @@ jobs:
           docker build . \
           --build-arg JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
           --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
+          --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
           -t 147997130241.dkr.ecr.ap-northeast-2.amazonaws.com/balbalm/backend-feed:latest
 
       - name: Configure AWS credentials
@@ -44,3 +46,18 @@ jobs:
       - name: Push Docker image
         run: |
           docker push 147997130241.dkr.ecr.ap-northeast-2.amazonaws.com/balbalm/backend-feed:latest
+  
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Deploy to EKS
+        run: |
+          aws eks update-kubeconfig --region ap-northeast-2 --name ${{ vars.EKS_CLUSTER_NAME }}
+          kubectl rollout restart deploy -n devocean balbalm-feed
