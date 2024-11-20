@@ -91,6 +91,14 @@ async def http_log(request, call_next):
 
 app.add_middleware(ContextMiddleware)
 
+# AWS Load Balancer의 Health Check 처리
+@app.get("/", tags=["Health Check"])
+async def health_check():
+    """
+    Health Check
+    """
+    return {"status": "ok"}
+
 # feed prefix 추가
 feed_router = APIRouter(
     prefix="/feed",
