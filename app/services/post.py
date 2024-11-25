@@ -41,18 +41,40 @@ def famous_posts(db: Session) -> List[FamousResponse]:
     """
     좋아요 수 기준 상위 5개의 인기 게시물 반환 (사용자 이름 포함)
     """
+    # posts = (
+    #     db.query(
+    #         PostTable,
+    #         UserTable.name.label('user_name'),
+    #         # pylint: disable=not-callable # SQLAlchemy 2.0.0 이후로 업그레이드된 이후 발생하는 pylint의 문제라고 합니다
+    #         func.count(LikeTable.post_id).label('like_count')
+    #     )
+    #     .join(
+    #         UserTable, PostTable.user_id == cast(UserTable.social_id, String)
+    #     )
+    #     .outerjoin(LikeTable, PostTable.id == LikeTable.post_id)
+    #     .group_by(PostTable.id, UserTable.name)
+    #     .order_by(desc('like_count'))
+    #     .limit(100) # 상위 100개를 가져오고
+    #     .all()
+    # )
     posts = (
         db.query(
-            PostTable,
-            UserTable.name.label('user_name'),
+            PostTable,                      # 포스팅의 ID, 등록한 유저의 social_id 추출 가능
+            UserAbstractProfile.dog_name.label('user_name'),   # 피드홈에 등록한 닉네임
+            UserAbstractProfile.photo_path.label('profile_image'), # 피드홈에 등록한 프로필 이미지
             # pylint: disable=not-callable # SQLAlchemy 2.0.0 이후로 업그레이드된 이후 발생하는 pylint의 문제라고 합니다
             func.count(LikeTable.post_id).label('like_count')
         )
         .join(
-            UserTable, PostTable.user_id == cast(UserTable.social_id, String)
+            UserAbstractProfile,
+            PostTable.user_id == UserAbstractProfile.social_id
         )
         .outerjoin(LikeTable, PostTable.id == LikeTable.post_id)
-        .group_by(PostTable.id, UserTable.name)
+        .group_by(
+            PostTable.id,
+            UserAbstractProfile.dog_name,
+            UserAbstractProfile.photo_path
+        )
         .order_by(desc('like_count'))
         .limit(100) # 상위 100개를 가져오고
         .all()
@@ -60,13 +82,14 @@ def famous_posts(db: Session) -> List[FamousResponse]:
     random_posts = sample(posts, min(5, len(posts))) # 5개를 랜덤하게 추출
 
     post_list = []
-    for post, user_name, _ in random_posts:  # user_name 추가
+    for post, user_name, profile_image, _ in random_posts:  # user_name 추가
         likes = list_post_likes(post.id, db)
         post_list.append(FamousResponse(
             post_id=post.id,
-            user_id=post.user_id,
-            user_name=user_name,
-            image_urls=post.image_urls,
+            user_id=post.user_id,   # post 등록한 유저의 social_id
+            user_name=user_name,    # 유저의 닉네임
+            profile_image_url=profile_image, # 유저의 프로필 이미지
+            like_count=len(likes),
             liked_by=likes
         ))
     return post_list

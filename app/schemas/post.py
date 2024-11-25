@@ -39,7 +39,8 @@ class FamousResponse(BaseModel):
     post_id: int
     user_id: str
     user_name: str
-    image_urls: List[HttpUrl]
+    profile_image_url: str # 포스팅에 등록된 이미지가 아니라 유저의 프로필 이미지이므로
+    like_count: int
     liked_by: List[Like]
 
 class PostCreate(BaseModel):
