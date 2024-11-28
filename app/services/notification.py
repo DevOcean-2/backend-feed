@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models.notification import Notification as NotiTable
 from app.models.post import Like as LikeTable
+from app.models.post import UserAbstractProfile
 from app.schemas.notification import NotiResponse
 from app.schemas.post import Like
 
@@ -30,8 +31,20 @@ def get_notifications(user_id: str, db: Session) -> List[NotiResponse]:
         created_at_list: List[datetime] = []
 
         for notification in notifications:
-            like: LikeTable = (db.query(LikeTable).
-                               filter(LikeTable.id == notification.like_id).first())
+            like: LikeTable = (
+                db.query(
+                    LikeTable.user_id,
+                    UserAbstractProfile.dog_name.label('nickname'),   # 피드홈에 등록한 닉네임
+                    UserAbstractProfile.photo_path.label('profile_image_url'), # 피드홈에 등록한 프로필 이미지
+                )
+                .join(
+                    UserAbstractProfile,
+                    LikeTable.user_id == UserAbstractProfile.social_id
+                )
+                .filter(
+                    LikeTable.id == notification.like_id
+                ).first()
+            )
             likes.append(Like(
                 user_id=like.user_id,
                 nickname=like.nickname,
